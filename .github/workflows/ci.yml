@@ -1,0 +1,131 @@
+# The code checks of the repository: Rust format, Rust lint, Rust tests, TS
+# typecheck, TS lint and TS tests. Each check is its own job with no link to
+# the others, so one failure never hides the rest and the red job names the
+# check that broke. No job is advisory: all six pass or `ci` is red.
+#
+# The two branch patterns are the same as `gates.yml`. The Rust toolchain and
+# its components come only from `rust-toolchain.toml`. The TS jobs call the
+# npm scripts of `package.json`, so a script changes locally and here together.
+name: ci
+
+on:
+  push:
+    branches: [main_agent, 'milestone/**']
+  pull_request:
+    branches: [main_agent, 'milestone/**']
+
+permissions:
+  contents: read
+
+jobs:
+  rust-fmt:
+    name: Rust format (cargo fmt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The first cargo call makes rustup install the version and the
+      # components named in rust-toolchain.toml. Nothing is chosen here.
+      - name: Rust toolchain from rust-toolchain.toml
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo --version
+          rustup show
+      - name: cargo fmt --all -- --check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+
+  rust-clippy:
+    name: Rust lint (cargo clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain from rust-toolchain.toml
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo --version
+          rustup show
+      - name: cargo clippy --workspace --all-targets --locked -- -D warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  rust-test:
+    name: Rust tests (cargo test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust toolchain from rust-toolchain.toml
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo --version
+          rustup show
+      - name: cargo test --workspace --locked
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --workspace --locked
+
+  # The TS jobs each run `npm ci` first: node_modules does not carry from one
+  # job to another, and `npm ci` fails on a lockfile out of sync with package.json.
+  ts-typecheck:
+    name: TS typecheck (npm run typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm ci
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+      - name: npm run typecheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run typecheck
+
+  ts-lint:
+    name: TS lint (npm run lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm ci
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+      - name: npm run lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run lint
+
+  ts-test:
+    name: TS tests (npm run test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm ci
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+      - name: npm run test
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test
