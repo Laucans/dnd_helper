@@ -139,7 +139,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
-      - run: echo "not implemented — needs: stays inside the system"
+      - run: echo "not implemented — needs stays inside the system"
 
   # Contracts D, F — a Micro-UI's `actions` reference existing
   # DataCapabilities whose `callableBy` and `permissions` admit it.
@@ -147,7 +147,7 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     steps:
-      - run: echo "not implemented — actions: reference existing, callable DataCapabilities"
+      - run: echo "not implemented — actions reference existing, callable DataCapabilities"
 
   # Contract F — an `insert` DataCapability with empty `touches` contains no
   # update, upsert or trigger in its implementation.
