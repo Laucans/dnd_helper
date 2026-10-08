@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 8d12e8e6ca60adda603bb10adea441f8e2a83b7aef7cfef46189ff8c1f7378d7 # shrinks to entry = QueueEntry { command: CommandId("0"), data_capability: DataCapabilityRef("credit.requestLimitChange@2"), by: Actor("𑴋"), partition: Partition("Account/881"), position: 0, based_on: BasedOn { version: 0, values: None }, projection: None, your_value: Some(Null), state: Queued, confirmation: None, parked: None, requeued_from: None }

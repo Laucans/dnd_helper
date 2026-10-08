@@ -1,0 +1,17 @@
+[package]
+name = "dataguard-contract-types"
+version = "0.0.0"
+description = "Serde types for the DataGuard contracts G, H, J and L."
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde = { version = "1", default-features = false, features = ["std", "derive"] }
+serde_json = "1"
+thiserror = "2"
+
+[dev-dependencies]
+proptest = "1"
+# Default features add network schema retrieval (reqwest, rustls): keep off.
+jsonschema = { version = "0.58", default-features = false }
