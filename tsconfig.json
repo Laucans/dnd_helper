@@ -1,0 +1,25 @@
+{
+  // Type-checks the Micro-UIs and the screen composer (apps/**) and the root
+  // tooling files only. Never crates/: everything there is Rust.
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "target": "es2023",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    // Micro-UIs are bundled, not run by Node.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    // Framework-neutral: lets a future .tsx type-check without a config edit.
+    "jsx": "preserve",
+    "skipLibCheck": true
+  },
+  // vitest.config.ts is the one tooling input that keeps tsc off TS18003
+  // while apps/ does not exist yet.
+  "include": ["apps/**/*.ts", "apps/**/*.tsx", "vitest.config.ts"]
+}
