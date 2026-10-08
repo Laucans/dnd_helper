@@ -1,0 +1,5 @@
+# Exact toolchain for this repository, read by rustup locally and in CI.
+# Always an X.Y.Z version, never a channel name.
+[toolchain]
+channel = "1.98.1"
+components = ["rustfmt", "clippy"]
