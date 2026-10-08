@@ -1,0 +1,21 @@
+[package]
+name = "dataguard-store"
+version = "0.0.0"
+description = "Store plumbing of the Data layer: connection from the environment, migration runner, test schema harness."
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "dataguard-migrate"
+path = "src/bin/dataguard-migrate.rs"
+
+[dependencies]
+sha2 = { version = "0.11", default-features = false }
+thiserror = "2"
+tokio = { version = "1", default-features = false, features = ["rt", "time"] }
+tokio-postgres = { version = "0.7", default-features = false, features = ["runtime"] }
+
+[dev-dependencies]
+proptest = "1"
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
