@@ -1,0 +1,7 @@
+# Placeholder: cargo refuses a workspace with no member. Delete this
+# directory and regenerate Cargo.lock once another crate exists.
+[package]
+name = "workspace-placeholder"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
