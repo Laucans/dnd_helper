@@ -1,9 +1,7 @@
 # dataguard-store
 
-Store plumbing of the Data layer: the connection, the migration runner and the
-test schema harness. It ships only the runner's own bookkeeping table
-(`schema_migrations`); the queue, counter, audit and role tables arrive as
-numbered migrations in a later task.
+Store plumbing of the Data layer: the connection, the migration runner, the
+test schema harness, and the initial schema (migration 1).
 
 ## Connection
 
@@ -37,6 +35,54 @@ cargo run --locked -p dataguard-store --bin dataguard-migrate
   numbers are not `1..=K`.
 - Two runners at once: one waits for the other (advisory lock per schema).
 
+## Schema
+
+Migration `0001_initial_schema.sql` brings an empty schema to this, and
+nothing else exists (a test compares the table list):
+
+| table | holds |
+|---|---|
+| `data_queue` | one row per command: the fields of contract G (snake_case) plus `payload`, `idempotency_key`, `data_version`, `violations`, `created_at` |
+| `data_version_counter` | one row, `value bigint` starting at 0; a table and not a sequence, so a rollback leaves no gap |
+| `audit_log` | one row per event: `enqueued`, `applied`, `rejected`, `cancelled`, `refused` |
+| `data_capability_registry` | DataCapability versions (contract F), keyed by `(name, version)`, plus the full `manifest` |
+| `schema_migrations` | the runner's bookkeeping |
+
+The migration creates no role. It needs `dnd_app` and `dnd_readonly` (#73) and
+fails naming the missing one. Every foreign key is `ON DELETE RESTRICT ON
+UPDATE RESTRICT`. No trigger, no function, no sequence.
+
+### Grants
+
+PUBLIC holds nothing. Both roles have `USAGE` on the schema and nothing more.
+
+| table | `dnd_app` | `dnd_readonly` |
+|---|---|---|
+| `data_queue` | `SELECT`, `INSERT`, `UPDATE` on `state`, `based_on`, `projection`, `your_value`, `confirmation`, `parked`, `requeued_from`, `data_version`, `violations` | `SELECT` |
+| `data_version_counter` | `SELECT`, `UPDATE (value)` | `SELECT` |
+| `audit_log` | `SELECT`, `INSERT` | `SELECT` |
+| `data_capability_registry` | `SELECT`, `INSERT`, `UPDATE (ref)` | `SELECT` |
+| `schema_migrations` | `SELECT`, `INSERT` | `SELECT` |
+
+- `dnd_app` migrates, so it owns every table. Immutability binds it because the
+  migration makes the owner `REVOKE` its own privileges: there is no `DELETE`,
+  `TRUNCATE`, `REFERENCES` or `TRIGGER` for anyone, and no `UPDATE` on the
+  columns that keep a command in its place. Owner rights no privilege removes
+  (`ALTER`, `DROP`, a new `GRANT`) remain.
+- `UPDATE (ref)` on the registry exists only because PostgreSQL checks a foreign
+  key as the referenced table's owner with `FOR KEY SHARE`, which needs `UPDATE`
+  on one column. `ref` is generated, so any value written to it fails.
+- `schema_migrations` keeps `INSERT` for `dnd_app`: the runner records every
+  later migration as that role.
+
+### Left to code, not to the schema
+
+`dnd_app` holds the column `UPDATE` these need, so they belong to the enqueue
+path and the applier (#79, #80): a terminal state never moves back, and the
+counter only goes from `value` to `value + 1`.
+
+Requires PostgreSQL 13 or later (`gen_random_uuid()` without an extension).
+
 ## Adding a migration
 
 1. Add `migrations/<nnnn>_<name>.sql`.
@@ -63,6 +109,10 @@ let store = schema.connect().await.expect("connect");
   test fails. It never skips.
 - `cargo test --workspace --locked` is green with no database, and proves
   nothing about the runner then: check the `SKIPPED` count.
-- One unit test, `readonly_role_fails_typed`, reads `DATABASE_URL_READONLY`
-  (test code only, never the shipped crate) and reports its own `SKIPPED` line
-  when it is unset.
+- The tests that need the read-only role read `DATABASE_URL_READONLY` (test
+  code only, never the shipped crate) and report their own `SKIPPED` line when
+  it is unset: `readonly_role_fails_typed`, and in `src/schema_tests/` the
+  audit, read-only and privilege tests.
+- `src/schema_tests/` tests the schema itself, one module per table, plus
+  replay, atomicity of a failing migration and the privilege matrix. CI has no
+  database, so only a local run with both variables set proves the schema.

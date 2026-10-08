@@ -2,12 +2,20 @@
 
 use crate::migrate::Migration;
 
+/// The initial schema: DataQueue, `dataVersion` counter, audit log and
+/// DataCapability registry, with the grants to the two roles.
+pub(crate) const INITIAL_SCHEMA: &str = include_str!("../migrations/0001_initial_schema.sql");
+
 /// Every migration the binary knows, numbered `1..=N` in order.
 ///
-/// Empty in the plumbing slice: the runner ships only its own bookkeeping
-/// table, which is not a numbered migration. The Data layer schema arrives as
-/// entries here, each `include_str!`-ing a file under `migrations/`.
-pub const MIGRATIONS: &[Migration] = &[];
+/// Entry 1 brings an empty schema to the full Data layer schema. The runner's
+/// own bookkeeping table, `schema_migrations`, is not a numbered migration.
+/// Each entry `include_str!`-s a file under `migrations/`.
+pub const MIGRATIONS: &[Migration] = &[Migration {
+    number: 1,
+    name: "initial_schema",
+    sql: INITIAL_SCHEMA,
+}];
 
 #[cfg(test)]
 mod tests {

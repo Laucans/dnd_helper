@@ -128,7 +128,7 @@ impl Drop for TestSchema {
 }
 
 /// Writes `line` to stderr in one call, so concurrent tests never tear it.
-fn emit(line: &str) {
+pub(crate) fn emit(line: &str) {
     let _ = std::io::stderr().write_all(format!("{line}\n").as_bytes());
 }
 
