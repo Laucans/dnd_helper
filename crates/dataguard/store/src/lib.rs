@@ -1,6 +1,7 @@
-//! Store plumbing of the Data layer: the connection, the migration runner and
-//! the test schema harness. Nothing the Data layer stores ships here, only the
-//! runner's own bookkeeping table.
+//! Store plumbing of the Data layer: the connection, the migration runner, the
+//! test schema harness, and the initial schema (migration 1: DataQueue,
+//! `dataVersion` counter, audit log, DataCapability registry, and the grants to
+//! the application and read-only roles). See the README for the grants.
 //!
 //! # Connection
 //!
@@ -50,6 +51,8 @@ mod error;
 mod migrate;
 mod migrations;
 mod pg;
+#[cfg(test)]
+mod schema_tests;
 pub mod testing;
 
 pub use config::{DATABASE_URL_VAR, DEFAULT_CONNECT_TIMEOUT, StoreConfig};
