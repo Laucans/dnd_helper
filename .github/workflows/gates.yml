@@ -30,6 +30,8 @@ jobs:
           validate() {
             local schema="contracts/$1"; shift
             for file in "$@"; do
+              # A literal path is not a glob: nullglob keeps it when absent.
+              [ -e "$file" ] || continue
               echo "::group::$file against $schema"
               npx --yes ajv-cli@5 validate --spec=draft2020 -s "$schema" -d "$file"
               echo "::endgroup::"
