@@ -1,0 +1,17 @@
+# Virtual manifest: no package at the root. Declaring [workspace] here stops
+# cargo's upward search, so a parent directory's workspace never applies.
+[workspace]
+resolver = "3"
+# Any crate at crates/<system>/<name> joins the workspace with no edit here.
+# Cargo fails on a member glob that matches nothing, or that matches a
+# directory with no Cargo.toml. So crates/*/capabilities/*,
+# crates/dataguard/data-capabilities/* and crates/<system>/queries need an
+# edit here when their first file lands.
+members = ["crates/*/*"]
+# Holds aggregate.json manifests only, never a crate. Excluded so the glob
+# above skips it. Cargo ignores any crate placed below it.
+exclude = ["crates/dataguard/aggregates"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
