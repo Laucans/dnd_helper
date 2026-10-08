@@ -1,0 +1,182 @@
+# The CI gates of the agent-native architecture — see docs/ARCHITECTURE.md,
+# "CI gates". Installed by `harness init-repo`; the repository owns it from
+# here. A gate that is `if: false` is declared, not yet implemented: its rule
+# is in its name and its step, and implementing it is a task like any other.
+#
+# The two branch patterns are the harness's: `main_agent` is where finished
+# milestones land, `milestone/**` is what a task's pull request targets.
+name: gates
+
+on:
+  push:
+    branches: [main_agent, 'milestone/**']
+  pull_request:
+    branches: [main_agent, 'milestone/**']
+
+jobs:
+  # Contracts A, B, D, E, F, I — every manifest validates against its schema.
+  manifests-conform-to-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate every manifest against its contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          validate() {
+            local schema="contracts/$1"; shift
+            for file in "$@"; do
+              echo "::group::$file against $schema"
+              npx --yes ajv-cli@5 validate --spec=draft2020 -s "$schema" -d "$file"
+              echo "::endgroup::"
+            done
+          }
+          validate a-concept.schema.json concepts/**/concept.json
+          validate b-capability-manifest.schema.json crates/**/capability.json
+          validate d-micro-ui-manifest.schema.json apps/**/micro-ui.json
+          validate e-screen-composition.schema.json apps/screens/*.json
+          validate f-data-capability.schema.json crates/**/data-capability.json
+          validate i-aggregate.schema.json crates/**/aggregate.json
+          validate c-persisted-query.schema.json queries/registry.json
+
+  # Contract B — no Capability depends on another Capability or on the write
+  # side. Read in the one place Rust declares dependencies: Cargo.toml.
+  capability-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: A Capability crate depends on no Capability and on nothing of the write side
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          failed=0
+          for toml in crates/*/capabilities/*/Cargo.toml; do
+            if grep -nE 'capabilities/|dataguard|dataqueue|resolver' "$toml" | grep -vE '^\s*[0-9]+:\s*#'; then
+              echo "::error file=$toml::a Capability must not depend on another Capability or on the write side"
+              failed=1
+            fi
+          done
+          exit $failed
+      - name: No Capability manifest names an `invokes` field
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          failed=0
+          for manifest in crates/**/capability.json; do
+            if grep -q '"invokes"' "$manifest"; then
+              echo "::error file=$manifest::a Capability invokes nothing"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  # Contracts A, B — every Concept a Capability implements is documented:
+  # `implements: Risk@3` ⇒ concepts/Risk/v3/concept.json names Risk, version 3.
+  concepts-documented:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every implemented Concept has its concept.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          failed=0
+          for manifest in crates/**/capability.json; do
+            ref=$(jq -r '.implements // empty' "$manifest")
+            [ -n "$ref" ] || continue
+            name=${ref%@*}; version=${ref##*@}
+            file="concepts/$name/v$version/concept.json"
+            if [ ! -f "$file" ] || [ "$(jq -r '.concept' "$file")" != "$name" ] || [ "$(jq -r '.version' "$file")" != "$version" ]; then
+              echo "::error file=$manifest::implements $ref but $file does not document it"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  # Contracts A, B — `implements: Risk@3` ⇒ the Concept's fixtures pass
+  # against this Capability. Implement: a conformance runner that feeds
+  # concepts/<Concept>/v<n>/fixtures.json to the Capability and compares.
+  semantic-conformance:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — every Capability that implements a Concept passes its fixtures"
+
+  # Contract B — no Capability has write access: read-only database role in
+  # its configuration, and a lint for any write statement in its queries.
+  read-only:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — Capabilities run under a read-only role"
+
+  # Contract C — every persisted query is valid against the current schema
+  # and the next one (expand/contract).
+  queries-valid:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — persisted queries validate against the current and the next schema"
+
+  # Contracts C, I — a schema change lists the Capabilities it touches (from
+  # queries/registry.json) and blocks until each one is migrated.
+  schema-impact:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — a schema change names the readers it touches"
+
+  # Contract B — a Micro-UI's `needs` reference only Capabilities of its own
+  # system (same namespace prefix), or ones its system declares shared.
+  system-frontier:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — needs: stays inside the system"
+
+  # Contracts D, F — a Micro-UI's `actions` reference existing
+  # DataCapabilities whose `callableBy` and `permissions` admit it.
+  write-actions:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — actions: reference existing, callable DataCapabilities"
+
+  # Contract F — an `insert` DataCapability with empty `touches` contains no
+  # update, upsert or trigger in its implementation.
+  effect-classification:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — a pure insert stays a pure insert"
+
+  # Contracts F, I — an `update`, `delete`, `upsert` DataCapability, or one
+  # with `touches`, was reviewed by the DataGuard owner and a human.
+  ownership:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — mutating DataCapabilities carry a human review"
+
+  # Contracts F, I — every declared invariant has a test; every
+  # DataCapability lists the invariants it may affect.
+  invariants-tested:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — every invariant has a test"
+
+  # Contracts D, E — every Micro-UI of a frozen screen exists in the version
+  # the screen references.
+  compositions-resolve:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented — a frozen screen references Micro-UIs that exist"

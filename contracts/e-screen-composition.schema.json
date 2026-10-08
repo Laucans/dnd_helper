@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/e-screen-composition.schema.json",
+  "title": "E. Screen composition",
+  "description": "A screen composed by the composer for one user goal, frozen in a version and replayed as is.",
+  "type": "object",
+  "properties": {
+    "screen": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "generatedFrom": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user goal the composer worked from."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "layout": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "patternProperties": {
+          "^[A-Z][A-Za-z0-9]*$": {
+            "type": "object",
+            "description": "The props handed to this Micro-UI; `$ctx.<name>` reads the screen's context."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "screen",
+    "generatedFrom",
+    "version",
+    "layout"
+  ],
+  "additionalProperties": false
+}

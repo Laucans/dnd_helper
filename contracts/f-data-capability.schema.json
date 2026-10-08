@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/f-data-capability.schema.json",
+  "title": "F. DataCapability",
+  "description": "A typed command behind the DataGuard: its effect, the existing fields it touches, its payload, how it behaves against a stale base, the invariants it may affect, who may call it.",
+  "type": "object",
+  "properties": {
+    "dataCapability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+      "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+    },
+    "owner": {
+      "const": "dataguard"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "effect": {
+      "enum": [
+        "insert",
+        "update",
+        "delete",
+        "upsert"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "aggregate": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "aggregate"
+      ],
+      "additionalProperties": false
+    },
+    "touches": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Za-z0-9]*\\.[a-z][A-Za-z0-9]*$",
+        "description": "`<Aggregate>.<field>`: `Account.creditLimit`."
+      },
+      "description": "The existing fields it changes. Empty with `insert` is the fast path: a pure addition."
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "enum": [
+        "confirm_on_stale",
+        "overwrite",
+        "relative"
+      ],
+      "description": "`relative` composes with the commands ahead and needs no confirmation."
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The invariant ids this command may affect, as the aggregate declares them."
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "callableBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Namespaces that may trigger it: `credit.*`."
+    },
+    "idempotencyKey": {
+      "enum": [
+        "required",
+        "optional"
+      ]
+    }
+  },
+  "required": [
+    "dataCapability",
+    "owner",
+    "version",
+    "effect",
+    "target",
+    "touches",
+    "payload",
+    "mode",
+    "invariants",
+    "permissions",
+    "callableBy",
+    "idempotencyKey"
+  ],
+  "additionalProperties": false
+}

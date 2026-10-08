@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/g-queue-entry.schema.json",
+  "title": "G. DataQueue entry",
+  "description": "One command in the queue, as the queue stores it and as its author sees it: its position in its partition, the base it was built on, the projected state and the commands awaiting confirmation ahead of it.",
+  "type": "object",
+  "properties": {
+    "command": {
+      "type": "string"
+    },
+    "dataCapability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*@[0-9]+$"
+    },
+    "by": {
+      "type": "string"
+    },
+    "partition": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*/.+$",
+      "description": "`<Aggregate>/<id>` — one partition per aggregate."
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "basedOn": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "values": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "projection": {
+      "type": "object",
+      "properties": {
+        "confirmed": {
+          "type": "object"
+        },
+        "pendingAhead": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string"
+              },
+              "by": {
+                "type": "string"
+              },
+              "value": {},
+              "state": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "command",
+              "by",
+              "state"
+            ]
+          }
+        }
+      },
+      "required": [
+        "confirmed",
+        "pendingAhead"
+      ],
+      "additionalProperties": false
+    },
+    "yourValue": {},
+    "state": {
+      "enum": [
+        "queued",
+        "awaiting_confirmation",
+        "confirmed",
+        "awaiting_review",
+        "parked",
+        "applied",
+        "rejected",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "confirmation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "by": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "by"
+      ]
+    },
+    "parked": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "ttl": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h|d)$",
+          "description": "A duration: `5m`, `24h`."
+        },
+        "onExpire": {
+          "enum": [
+            "drop"
+          ]
+        }
+      },
+      "required": [
+        "ttl",
+        "onExpire"
+      ]
+    },
+    "requeuedFrom": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The original command id, when this one came back at the end of the queue after a recompute."
+    }
+  },
+  "required": [
+    "command",
+    "dataCapability",
+    "by",
+    "partition",
+    "position",
+    "basedOn",
+    "state"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/a-concept.schema.json",
+  "title": "A. Concept",
+  "description": "A versioned definition shared across systems: what a value means, how it is computed or where it is canonical, and the fixtures every implementation must pass.",
+  "type": "object",
+  "properties": {
+    "concept": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "enum": [
+        "derived",
+        "authoritative"
+      ],
+      "description": "Derived values are recomputed and never mutated; authoritative ones are canonical and mutated only through the DataGuard."
+    },
+    "definition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "type": "object",
+      "description": "The fields the Concept produces, each with its type and constraints.",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The data the Concept is computed from, as `<entity>.<field>`."
+    },
+    "conformance": {
+      "type": "string",
+      "description": "Path to the executable fixtures, relative to this file."
+    },
+    "deprecates": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "description": "The version this one replaces; it stays available while a Capability implements it."
+    }
+  },
+  "required": [
+    "concept",
+    "version",
+    "kind",
+    "definition",
+    "output",
+    "conformance"
+  ],
+  "additionalProperties": false
+}

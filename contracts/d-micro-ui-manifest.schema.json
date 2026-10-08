@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/d-micro-ui-manifest.schema.json",
+  "title": "D. Micro-UI manifest",
+  "description": "A screen fragment: what it reads (Capabilities, by identifier), what it may trigger (DataCapabilities, by identifier), and the props it takes.",
+  "type": "object",
+  "properties": {
+    "microUi": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "system": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "A bounded context's namespace: `credit`."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Read by the composer to pick this Micro-UI for a user goal."
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+        "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+      },
+      "description": "The Capabilities it reads — of its own system, by reference, never by import."
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+        "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+      },
+      "description": "The DataCapabilities a user action may trigger."
+    },
+    "props": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "microUi",
+    "system",
+    "description",
+    "needs",
+    "props"
+  ],
+  "additionalProperties": false
+}

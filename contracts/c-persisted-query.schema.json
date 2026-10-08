@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/c-persisted-query.schema.json",
+  "title": "C. Persisted query registry",
+  "description": "The registry of every persisted query: which Capability reads through it, the file that holds it, its hash, and the fields it touches — what tells a schema change who it affects.",
+  "type": "object",
+  "properties": {
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]*$",
+            "description": "The operation name."
+          },
+          "capability": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+            "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+          },
+          "file": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "Every `<entity>.<field>` the query reads."
+          }
+        },
+        "required": [
+          "query",
+          "capability",
+          "file",
+          "sha256",
+          "fields"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "queries"
+  ],
+  "additionalProperties": false
+}

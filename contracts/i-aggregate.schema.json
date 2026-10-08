@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/i-aggregate.schema.json",
+  "title": "I. Aggregate: criticality, invariants, relations",
+  "description": "The integrity rules of one aggregate: how critical each field is and who reviews it, the invariants the DataGuard checks, the policy of every relation, and what a hold on it may do.",
+  "type": "object",
+  "properties": {
+    "aggregate": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "fields": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "derived",
+              "authoritative"
+            ]
+          },
+          "criticality": {
+            "enum": [
+              "low",
+              "normal",
+              "critical"
+            ]
+          },
+          "review": {
+            "type": "string",
+            "description": "The approver role a critical field requires: `role:credit-manager`."
+          },
+          "merge": {
+            "enum": [
+              "set",
+              "last-writer"
+            ],
+            "description": "How concurrent writes to a low-criticality field merge."
+          }
+        },
+        "required": [
+          "kind",
+          "criticality"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "onViolation": {
+            "enum": [
+              "reject",
+              "human_review"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rule",
+          "onViolation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Za-z0-9]*\\.[a-z][A-Za-z0-9]*$",
+            "description": "`<Aggregate>.<field>`: `Account.creditLimit`."
+          },
+          "onDelete": {
+            "enum": [
+              "restrict",
+              "cascade",
+              "nullify",
+              "archive",
+              "review"
+            ]
+          },
+          "onUpdate": {
+            "enum": [
+              "propagate",
+              "restrict"
+            ]
+          },
+          "semantic": {
+            "type": "boolean",
+            "description": "The link exists outside a foreign key."
+          }
+        },
+        "required": [
+          "from",
+          "onDelete"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "holds": {
+      "type": "object",
+      "properties": {
+        "maxTtl": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h|d)$",
+          "description": "A duration: `5m`, `24h`."
+        },
+        "renewable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "maxTtl",
+        "renewable"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "aggregate",
+    "fields",
+    "invariants",
+    "relations",
+    "holds"
+  ],
+  "additionalProperties": false
+}

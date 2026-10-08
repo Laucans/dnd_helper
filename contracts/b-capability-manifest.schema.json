@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/b-capability-manifest.schema.json",
+  "title": "B. Capability manifest",
+  "description": "A read-only unit: what it computes, the Concept it implements, the persisted queries it reads through. It names no other Capability and nothing of the write side.",
+  "type": "object",
+  "properties": {
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+      "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+    },
+    "system": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "A bounded context's namespace: `credit`."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Read by the composer to pick Micro-UIs and by humans to find the unit."
+    },
+    "implements": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*@[0-9]+$",
+      "description": "A versioned Concept: `Risk@3`."
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "output": {
+      "type": [
+        "object",
+        "string"
+      ],
+      "description": "A Concept reference (`Risk@3 & { asOf: DataVersion }`) or a shape."
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Paths of the persisted queries this Capability reads through — its only access to the Data."
+    },
+    "cache": {
+      "type": "object",
+      "properties": {
+        "ttl": {
+          "type": "string",
+          "pattern": "^[0-9]+(ms|s|m|h|d)$",
+          "description": "A duration: `5m`, `24h`."
+        }
+      },
+      "required": [
+        "ttl"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "capability",
+    "system",
+    "version",
+    "description",
+    "reads"
+  ],
+  "additionalProperties": false,
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "invokes"
+        ]
+      },
+      {
+        "required": [
+          "needs"
+        ]
+      },
+      {
+        "required": [
+          "writes"
+        ]
+      },
+      {
+        "required": [
+          "actions"
+        ]
+      }
+    ]
+  }
+}

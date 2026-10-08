@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/h-command-result.schema.json",
+  "title": "H. Command result",
+  "description": "What the DataGuard answers a caller once a command is settled.",
+  "type": "object",
+  "properties": {
+    "commandId": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "applied",
+        "rejected",
+        "expired",
+        "cancelled"
+      ]
+    },
+    "dataVersion": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "The global version the application took — what a consistent read after write asks for."
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The invariants violated, when rejected."
+    },
+    "reviewId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "commandId",
+    "status",
+    "dataVersion",
+    "violations",
+    "reviewId"
+  ],
+  "additionalProperties": false
+}

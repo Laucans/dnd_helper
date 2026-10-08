@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/k-reconciliation.schema.json",
+  "title": "K. Reconciliation proposal",
+  "description": "What the reconciliation AI hands a human approver when two commands declared different values for one field: the base, the candidates, the proposal and its rationale, the decision.",
+  "type": "object",
+  "properties": {
+    "review": {
+      "type": "string"
+    },
+    "aggregate": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*/.+$"
+    },
+    "field": {
+      "type": "string"
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {}
+      },
+      "required": [
+        "version",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "by": {
+            "type": "string"
+          },
+          "value": {}
+        },
+        "required": [
+          "command",
+          "by",
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "properties": {
+        "by": {
+          "const": "ai"
+        },
+        "value": {},
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invariantsChecked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "by",
+        "value",
+        "rationale",
+        "invariantsChecked"
+      ],
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "approver": {
+          "type": "string"
+        },
+        "by": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "approver"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "review",
+    "aggregate",
+    "field",
+    "base",
+    "candidates",
+    "proposal",
+    "decision"
+  ],
+  "additionalProperties": false
+}

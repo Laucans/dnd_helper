@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.agent-native.dev/j-impact-plan.schema.json",
+  "title": "J. Impact plan",
+  "description": "What the Resolver hands the DataGuard for a command that touches existing data: who depends on it, what cascades, what is invalidated, and the decision.",
+  "type": "object",
+  "properties": {
+    "command": {
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "insert",
+        "update",
+        "delete",
+        "upsert"
+      ]
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "readers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*\\.[A-Za-z][A-Za-z0-9]*$",
+            "description": "`<system>.<name>`, the system being the namespace: `credit.requestLimitChange`."
+          }
+        },
+        "holds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "by": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "expires": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "by",
+              "id",
+              "expires"
+            ]
+          }
+        },
+        "pendingCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "readers",
+        "holds",
+        "pendingCommands"
+      ],
+      "additionalProperties": false
+    },
+    "cascade": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relation": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "policy": {
+            "enum": [
+              "restrict",
+              "cascade",
+              "nullify",
+              "archive",
+              "review"
+            ]
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "semantic": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "relation",
+          "rows",
+          "policy"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "invalidates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Derived values to recompute: `Risk@3(customer:881)`."
+    },
+    "invariantsAfter": {
+      "enum": [
+        "ok",
+        "violated"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "auto",
+        "confirm",
+        "human_review",
+        "blocked",
+        "rejected"
+      ]
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "command",
+    "classification",
+    "dependencies",
+    "cascade",
+    "invalidates",
+    "invariantsAfter",
+    "decision",
+    "reasons"
+  ],
+  "additionalProperties": false
+}
